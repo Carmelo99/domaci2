@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoResource;
 use App\Models\Video;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class VideoController extends Controller
 {
@@ -29,7 +30,33 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'name' => 'required|max:100',
+            'length' => 'required|integer',
+            'resolution' => 'required|integer',
+            'owner' => 'required|max:50',
+            'folder_id'=>'required'
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['error' => $validator->errors(), 'Validation Error']);
+        }
+
+        $video = Video::create([
+            'name'=>$request->name,
+            'length'=>$request->length,
+            'resolution'=>$request->resolution,
+            'owner'=>$request->owner,
+            'folder_id'=>$request->folder_id,
+            'user_id'=>Auth::fitness_trainer()->id //moguca greska
+        ]);
+
+        return response()->json(['video' => new VideoResource($video), 'message' => 'Video created successfully']);
+
+
+
     }
 
     /**
@@ -40,7 +67,7 @@ class VideoController extends Controller
      */
     public function show(Video $video)
     {
-        //
+        return response()->json(['video' => new VideoResource($video)]);
     }
 
     /**
@@ -52,7 +79,23 @@ class VideoController extends Controller
      */
     public function update(Request $request, Video $video)
     {
-        //
+        $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'name' => 'required|max:100',
+            'length' => 'required|integer',
+            'resolution' => 'required|integer',
+            'owner' => 'required|max:50',
+            'folder_id' => 'required',
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['error' => $validator->errors(), 'Validation Error']);
+        }
+
+        $video->update($data);
+
+        return response()->json(['video' => new VideoResource($video), 'message' => 'Video updated successfully']);
     }
 
     /**
@@ -63,6 +106,12 @@ class VideoController extends Controller
      */
     public function destroy(Video $video)
     {
-        //
+        
+
+        $video->delete();
+
+        return response()->json(['message' => 'Video deleted successfully']);
+
+
     }
 }
